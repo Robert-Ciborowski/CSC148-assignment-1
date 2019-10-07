@@ -22,12 +22,11 @@ Copyright (c) 2019 Jacqueline Smith
 from __future__ import annotations
 from typing import List, Optional, TextIO
 import json
+from assignments.a1.container import PriorityQueue
 
 # Use this constant in your code
 EXPRESS_LIMIT = 7
 
-
-# some changes
 
 # TODO: Complete the GroceryStore class and methods according to the docstrings
 # You may add private attributes and helper methods, but do not change the
@@ -36,11 +35,39 @@ EXPRESS_LIMIT = 7
 # in the class docstring.
 class GroceryStore:
     """A grocery store.
+    === Attributes ===
+    _regular_count: the number of regular checkout lines
+    _express_count: the number of express checkout lines
+    _self_serve_count: the number of self checkout lines
+    _lines: the list of checkout lines
     """
+    _regular_count: int
+    _express_count: int
+    _self_serve_count: int
+    _lines: [CheckoutLine]
 
     def __init__(self, config_file: TextIO) -> None:
         """Initialize a GroceryStore from a configuration file <config_file>.
         """
+        text = ""
+        for str in config_file:
+            text += str
+        j = json.loads(str)
+        self._regular_count = j['regular_count']
+        self._express_count = j['express_count']
+        self._self_serve_count = j['self_serve_count']
+        # review this to avoid off by one errors
+        i = 0
+        while i < self._regular_count:
+            self._lines.append(RegularLine)
+            i += 1
+        i = 0
+        while i < self._express_count:
+            self._lines.append(ExpressLine)
+            i += 1
+        i = 0
+        while i < self._self_serve_count:
+            self._lines.append(SelfServeLine)
 
     def enter_line(self, customer: Customer) -> int:
         """Pick a new line for <customer> to join.
@@ -50,31 +77,65 @@ class GroceryStore:
 
         Return -1 if there is no line available for the customer to join.
         """
+        # I introduced _lines, is the index of the line there the same index
+        # that's referred to in the docstring?
+
+        # arbitrary BIG length
+        smallest_length = 8000000000
+        index = -1
+        for i in range(len(self._lines)):
+            curr_length = len(self._lines[i])
+            if curr_length == self._lines[i].capacity:
+                continue
+            if curr_length < smallest_length:
+                smallest_length = curr_length
+                index = i
+        return index
 
     def line_is_ready(self, line_number: int) -> bool:
         """Return True iff checkout line <line_number> is ready to start a
         checkout.
         """
+        # does this mean when the checkout line can accept a new customer or
+        # when it is ready to process the first customer in the queue?
+
+        # maybe along the latter lines it refers to enough time having passed
+        # since the previously processed customer
+
+        # even though the latter feels like a better description of the
+        # header, I'm gonna implement the former as it seems to match the
+        # other methods in this class
+        return self._lines[line_number].can_accept()
 
     def start_checkout(self, line_number: int) -> int:
         """Return the time it will take to check out the next customer in
         line <line_number>
         """
+        return self._lines[line_number].start_checkout()
 
     def complete_checkout(self, line_number: int) -> int:
         """Return the number of customers remaining to be checked out in line
         <line_number>
         """
+        # I don't see yet how the function described in the docstring relates
+        # to completing the checkout
+
+        return len(self._lines[line_number])
 
     def close_line(self, line_number: int) -> List[Customer]:
         """Close checkout line <line_number> and return the customers from
         that line who are still waiting to be checked out.
         """
 
+        return self._lines[line_number].close()
+
     def get_first_in_line(self, line_number: int) -> Optional[Customer]:
         """Return the first customer in line <line_number>, or None if there
         are no customers in line.
         """
+        if not self._lines[line_number].queue[0] is None:
+            return self._lines[line_number].queue[0]
+        return None
 
 
 # TODO: Complete the methods in Customer according to their docstrings
@@ -111,6 +172,9 @@ class Customer:
         >>> belinda.arrival_time
         -1
         """
+        self.name = name
+        self._items = items
+        self.arrival_time = -1
 
     def num_items(self) -> int:
         """Return the number of items this customer has.
@@ -119,6 +183,7 @@ class Customer:
         >>> c.num_items()
         2
         """
+        return len(self._items)
 
     def get_item_time(self) -> int:
         """Return the number of seconds it takes to check out this customer.
@@ -127,6 +192,10 @@ class Customer:
         >>> c.get_item_time()
         10
         """
+        time = 0
+        for item in self._items:
+            time += item.get_time()
+        return time
 
 
 class Item:
@@ -174,7 +243,7 @@ class CheckoutLine:
     === Attributes ===
     capacity: The number of customers allowed in this CheckoutLine.
     is_open: True iff the line is open.
-    queue: Customers in this line in FIFO order.
+    queue: Customers in this line in FIFO order. Front of queue is at index 0
 
     === Representation Invariants ===
     - Each customer in this line has not been checked out yet.
@@ -195,14 +264,22 @@ class CheckoutLine:
         >>> line.queue
         []
         """
+        self.is_open = True
+        self.queue = []
 
     def __len__(self) -> int:
         """Return the size of this CheckoutLine.
         """
+        return len(self.queue)
 
     def can_accept(self, customer: Customer) -> bool:
         """Return True iff this CheckoutLine can accept <customer>.
         """
+        if not self.is_open:
+            return False
+        if len(self) < self.capacity:
+            return True
+        return False
 
     def accept(self, customer: Customer) -> bool:
         """Accept <customer> at the end of this CheckoutLine.
@@ -218,24 +295,40 @@ class CheckoutLine:
         >>> line.queue == [c1]
         True
         """
+        if not self.can_accept():
+            return False
+        self.queue.append(customer)
+        return True
 
     def start_checkout(self) -> int:
         """Checkout the next customer in this CheckoutLine.
 
         Return the time it will take to checkout the next customer.
         """
+        # does not mutate queue
+        # this assumes self.queue is non empty
+        return self.queue[0].get_item_time()
 
     def complete_checkout(self) -> bool:
         """Finish the checkout for this CheckoutLine.
 
         Return whether there are any remaining customers in the line.
         """
+        return self.queue != []
 
     def close(self) -> List[Customer]:
         """Close this line.
 
         Return a list of all customers that need to be moved to another line.
         """
+        # Also mutates queue
+        moved_customers = []
+        self.is_open = False
+        # if we don't want to mutate queue, just traverse self.queue and
+        # append each to moved_customers
+        for i in range(len(self) - 1):
+            moved_customers.append(self.queue.pop())
+        return moved_customers
 
 
 # TODO: implement the following subclasses of CheckoutLine
@@ -252,18 +345,32 @@ class RegularLine(CheckoutLine):
 
 class ExpressLine(CheckoutLine):
     """An express CheckoutLine.
+
+    Has a limit of EXPRESS_LIMIT customers in line.
     """
+
+    def can_accept(self, customer: Customer) -> bool:
+        if len(self) < EXPRESS_LIMIT:
+            return CheckoutLine.can_accept(self, customer)
+        return False
 
 
 class SelfServeLine(CheckoutLine):
     """A self-serve CheckoutLine.
+
+    Takes twice as long to check out.
     """
+
+    def start_checkout(self) -> int:
+        return 2 * CheckoutLine.start_checkout(self)
 
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()
     import python_ta
+
     python_ta.check_all(config={
         'allowed-import-modules': ['__future__', 'typing', 'json',
                                    'python_ta', 'doctest'],
