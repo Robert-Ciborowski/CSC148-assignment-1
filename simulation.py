@@ -60,6 +60,9 @@ class GroceryStoreSimulation:
         # I think they mean <self._events> instead of <initial_events>
         # I don't know what <initial_events> is
 
+        # actually I think <initial_events> might be in <file> but I
+        # don't know anything about that
+
         # Initialize statistics
         stats = {
             'num_customers': 0,
