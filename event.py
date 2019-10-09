@@ -147,7 +147,6 @@ class Event:
         raise NotImplementedError('Implemented in a subclass')
 
 
-# TODO: Complete the subclasses for the different types of events below.
 # You should use the provided attributes in your solution. However, if you need
 # to, you may add private attributes and helper methods, but do not change the
 # public interface.
@@ -168,6 +167,10 @@ class CustomerArrival(Event):
         self.customer = c
 
     def do(self, store: GroceryStore) -> List[Event]:
+        """Adds a customer to a line. If the store cannot find a suitable line,
+        the event gets returned in a list with a modified timestamp. If the
+        customer turns out to be the first in their line, a CheckoutStarted
+        event gets returned in a list."""
         line = store.enter_line(self.customer)
 
         if line == -1:
@@ -177,6 +180,8 @@ class CustomerArrival(Event):
         else:
             timestamp = 0
 
+            # Create an event that checks out the customer if they are at the
+            # front of the line.
             if store.get_first_in_line(line) is None:
                 return [CheckoutStarted(timestamp, line)]
 
@@ -192,7 +197,6 @@ class CheckoutStarted(Event):
     === Attributes ===
     line_number: The number of the checkout line.
     """
-    # this docstring gives a clue to start_checkout in store.py
     line_number: int
 
     def __init__(self, timestamp: int, line_number: int) -> None:
@@ -205,10 +209,13 @@ class CheckoutStarted(Event):
         assert 1 == 0
 
     def do(self, store: GroceryStore) -> List[Event]:
-        customer = store.get_first_in_line(self._line_number)
+        """Starts a checkout for the customer. A CheckoutCompleted event is
+        returned in a list."""
+        customer = store.get_first_in_line(self.line_number)
         duration = store.start_checkout(self.line_number)
         return [CheckoutCompleted(self.timestamp + duration, self.line_number,
                                   customer)]
+
 
 class CheckoutCompleted(Event):
     """A customer finishes the checkout process.
@@ -231,9 +238,9 @@ class CheckoutCompleted(Event):
         self.customer = c
 
     def do(self, store: GroceryStore) -> List[Event]:
-        # If a customer finishes checking out, the next customer in the line (if
-        # there is one) gets a “begin checking out” event with the same
-        # timestamp as the “finish” event.
+        """Completes the checkout of a customer. If another customer is waiting
+        behind, a CheckoutStarted event is returned in a list. Otherwise,
+        an empty list is returned."""
         remaining = store.complete_checkout(self.line_number)
 
         if remaining == 0:
@@ -257,14 +264,16 @@ class CloseLine(Event):
         self.line_number = line_number
 
     def do(self, store: GroceryStore) -> List[Event]:
-        assert 1 == 0
-        # A line closes. All customers who were in the line must join a new
-        # line, except the first customer in the line. No new customers may join
-        # the line after it has closed.
-        # If a line closes, there is one “new customer” event per customer in
-        # the checkout line after the first one. The new events should be spaced
-        # 1 second apart, with the last customer in the line having the earliest
-        # “new customer” event, which is the same as the “line close” event.
+        """This closes a line (its ID is stored in line_number). All customers
+        who were in the line join a new line, except the first customer in the
+        line.
+
+        There is one CustomerArrival event per customer in the checkout
+        line after the first one. The new events are spaced 1 second apart, with
+        the last customer in the line having the earliest “new customer” event,
+        which is the same as the “line close” event. These events are returned
+        in a list.
+        """
         customers = store.close_line(self.line_number)
         events = []
         count = 0
@@ -285,20 +294,23 @@ def create_event_list(event_file: TextIO) -> List[Event]:
     events = []
 
     for line in event_file.readlines():
+        # data is a list of strings which contain our event data.
         data = line.split(" ")
         event_type = data[1]
 
         if event_type == "Close":
-            events.append(CloseLine(int(data[0])))
+            events.append(CloseLine(int(data[0]), int(data[2])))
         elif event_type == "Arrive":
             items = []
 
+            # This processes every item.
             for i in range(3, len(data), 2):
                 item = Item(data[i], int(data[i + 1]))
                 items.append(item)
 
             customer = Customer(data[2], items)
             events.append(CustomerArrival(customer, int(data[0])))
+
 
 if __name__ == '__main__':
     import doctest
