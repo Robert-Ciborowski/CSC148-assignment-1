@@ -57,13 +57,59 @@ class GroceryStoreSimulation:
         Return a dictionary containing statistics of the simulation,
         according to the specifications in the assignment handout.
         """
+        # I think they mean <self._events> instead of <initial_events>
+        # I don't know what <initial_events> is
+
+        # actually I think <initial_events> might be in <file> but I
+        # don't know anything about that
+
         # Initialize statistics
         stats = {
             'num_customers': 0,
             'total_time': 0,
             'max_wait': -1
         }
-        # TODO: Calculate and return the correct statistics.
+        # outlining steps
+
+        # fill self._events from file
+        self._events = create_event_list(file)
+
+        # we will track each customer's arrival and departure times
+        # I am assuming each customer has a unique id in memory,
+        # ie no one customer has two customer objects
+        # (also assuming that no two customers have same id,
+        # but this seems reasonable)
+        customers = {}
+        # do all events
+        while not self._events.is_empty():
+            # calculate statistics
+
+            # get next event
+            current_event = self._events.remove()
+
+            # I think the event timestamp is the current time
+            stats['total_time'] = self._events.remove().timestamp
+
+            if isinstance(current_event, CustomerArrival):
+                stats['num_customers'] += 1
+                customers[current_event.customer] = \
+                    [current_event.timestamp, -1]
+            elif isinstance(current_event, CheckoutCompleted):
+                customers[current_event.customer][1] = current_event.timestamp
+
+            #  calculate max wait time
+            for customer in customers:
+                wait_time = customer[1] - customer[0]
+                if wait_time > stats['max_wait']:
+                    stats['max_wait'] = wait_time
+
+            # I think we need to track each customer,
+            # to monitor their wait times
+
+            # do we track from arrival or from joining line?
+            # assuming arrival
+
+        # TODO: test these stats
 
         return stats
 
