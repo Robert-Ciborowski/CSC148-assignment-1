@@ -175,6 +175,7 @@ class CheckoutStarted(Event):
     === Attributes ===
     line_number: The number of the checkout line.
     """
+    # this docstring gives a clue to start_checkout in store.py
     line_number: int
 
     def __init__(self, timestamp: int, line_number: int) -> None:
