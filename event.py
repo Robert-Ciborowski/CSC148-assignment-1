@@ -164,6 +164,23 @@ class CustomerArrival(Event):
     def __init__(self, timestamp: int, c: Customer) -> None:
         """Initialize a CustomerArrival event with <timestamp> and customer <c>.
         """
+        Event.__init__(self, timestamp)
+        self.customer = c
+
+    def do(self, store: GroceryStore) -> List[Event]:
+        line = store.enter_line(self.customer)
+
+        if line == -1:
+            # This event needs to be reprocessed at a later time.
+            self.timestamp += 1
+            return [self]
+        else:
+            timestamp = 0
+
+            if store.get_first_in_line(line) is None:
+                return [CheckoutStarted(timestamp, line)]
+
+            return []
 
 
 class CheckoutStarted(Event):
@@ -181,7 +198,16 @@ class CheckoutStarted(Event):
         """Initialize a CheckoutStarted event with <timestamp> and
         <line_number>.
         """
+        Event.__init__(self, timestamp)
+        self.line_number = line_number
 
+        assert 1 == 0
+
+    def do(self, store: GroceryStore) -> List[Event]:
+        customer = store.get_first_in_line(self._line_number)
+        duration = store.start_checkout(self.line_number)
+        return [CheckoutCompleted(self.timestamp + duration, self.line_number,
+                                  customer)]
 
 class CheckoutCompleted(Event):
     """A customer finishes the checkout process.
@@ -199,6 +225,20 @@ class CheckoutCompleted(Event):
         """Initialize a CheckoutCompleted event with <timestamp>, <line_number>,
         and customer <c>.
         """
+        Event.__init__(self, timestamp)
+        self.line_number = line_number
+        self.customer = c
+
+    def do(self, store: GroceryStore) -> List[Event]:
+        # If a customer finishes checking out, the next customer in the line (if
+        # there is one) gets a “begin checking out” event with the same
+        # timestamp as the “finish” event.
+        remaining = store.complete_checkout(self.line_number)
+
+        if remaining == 0:
+            return []
+
+        return [CheckoutStarted(self.timestamp, self.line_number)]
 
 
 class CloseLine(Event):
@@ -212,16 +252,52 @@ class CloseLine(Event):
     def __init__(self, timestamp: int, line_number: int) -> None:
         """Initialize a CloseLine event with <timestamp> and <line_number>.
         """
+        Event.__init__(self, timestamp)
+        self.line_number = line_number
+
+    def do(self, store: GroceryStore) -> List[Event]:
+        assert 1 == 0
+        # A line closes. All customers who were in the line must join a new
+        # line, except the first customer in the line. No new customers may join
+        # the line after it has closed.
+        # If a line closes, there is one “new customer” event per customer in
+        # the checkout line after the first one. The new events should be spaced
+        # 1 second apart, with the last customer in the line having the earliest
+        # “new customer” event, which is the same as the “line close” event.
+        customers = store.close_line(self.line_number)
+        events = []
+        count = 0
+
+        for i in range(len(customers), 1, -1):
+            customer = customers[i]
+            events.append(CustomerArrival(self.timestamp + count, customer))
+            count += 1
+        return events
 
 
-# TODO: Complete this function, which creates a list of events from a file.
 def create_event_list(event_file: TextIO) -> List[Event]:
     """Return a list of Events based on raw list of events in <event_file>.
 
     Precondition: <event_file> is in the format specified by the assignment
     handout.
     """
+    events = []
 
+    for line in event_file.readlines():
+        data = line.split(" ")
+        event_type = data[1]
+
+        if event_type == "Close":
+            events.append(CloseLine(int(data[0])))
+        elif event_type == "Arrive":
+            items = []
+
+            for i in range(3, len(data), 2):
+                item = Item(data[i], int(data[i + 1]))
+                items.append(item)
+
+            customer = Customer(data[2], items)
+            events.append(CustomerArrival(customer, int(data[0])))
 
 if __name__ == '__main__':
     import doctest
