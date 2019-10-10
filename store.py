@@ -50,24 +50,27 @@ class GroceryStore:
         """Initialize a GroceryStore from a configuration file <config_file>.
         """
         text = ""
+        self._lines = []
         for str in config_file:
             text += str
-        j = json.loads(str)
+        j = json.loads(text)
         self._regular_count = j['regular_count']
         self._express_count = j['express_count']
         self._self_serve_count = j['self_serve_count']
+        line_capacity = j['line_capacity']
         # review this to avoid off by one errors
         i = 0
         while i < self._regular_count:
-            self._lines.append(RegularLine)
+            self._lines.append(RegularLine(line_capacity))
             i += 1
         i = 0
         while i < self._express_count:
-            self._lines.append(ExpressLine)
+            self._lines.append(ExpressLine(EXPRESS_LIMIT))
             i += 1
         i = 0
         while i < self._self_serve_count:
-            self._lines.append(SelfServeLine)
+            self._lines.append(SelfServeLine(line_capacity))
+            i += 1
 
     def enter_line(self, customer: Customer) -> int:
         """Pick a new line for <customer> to join.
@@ -133,7 +136,7 @@ class GroceryStore:
         """Return the first customer in line <line_number>, or None if there
         are no customers in line.
         """
-        if not self._lines[line_number].queue[0] is None:
+        if not len(self._lines[line_number].queue) == 0:
             return self._lines[line_number].queue[0]
         return None
 
@@ -266,6 +269,7 @@ class CheckoutLine:
         """
         self.is_open = True
         self.queue = []
+        self.capacity = capacity
 
     def __len__(self) -> int:
         """Return the size of this CheckoutLine.
@@ -307,6 +311,10 @@ class CheckoutLine:
         """
         # does not mutate queue
         # this assumes self.queue is non empty
+        # TODO: Add a precondition saying it should not be empty??????
+        # Or are we not allowed to modify headers.
+        if len(self.queue) == 0:
+            return 0
         return self.queue[0].get_item_time()
 
     def complete_checkout(self) -> bool:

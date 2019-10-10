@@ -206,12 +206,14 @@ class CheckoutStarted(Event):
         Event.__init__(self, timestamp)
         self.line_number = line_number
 
-        assert 1 == 0
-
     def do(self, store: GroceryStore) -> List[Event]:
         """Starts a checkout for the customer. A CheckoutCompleted event is
         returned in a list."""
         customer = store.get_first_in_line(self.line_number)
+
+        if customer is None:
+            return []
+
         duration = store.start_checkout(self.line_number)
         return [CheckoutCompleted(self.timestamp + duration, self.line_number,
                                   customer)]
@@ -311,6 +313,7 @@ def create_event_list(event_file: TextIO) -> List[Event]:
             customer = Customer(data[2], items)
             events.append(CustomerArrival(customer, int(data[0])))
 
+    return events
 
 if __name__ == '__main__':
     import doctest
