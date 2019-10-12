@@ -77,8 +77,20 @@ class GroceryStoreSimulation:
         while len(event_list) != 0:
             self._events.add(event_list.pop())
 
+        customers = {}
+
         while not self._events.is_empty():
             event = self._events.remove()
+
+            if isinstance(event, CustomerArrival):
+                stats['num_customers'] += 1
+                times = []
+                times.append(event.timestamp)
+                times.append(-1)
+                customers[event.customer] = times
+            elif isinstance(event, CheckoutCompleted):
+                customers[event.customer][1] = event.timestamp
+
             new_events = event.do(self._store)
 
             while not len(new_events) == 0:
@@ -89,33 +101,34 @@ class GroceryStoreSimulation:
         # ie no one customer has two customer objects
         # (also assuming that no two customers have same id,
         # but this seems reasonable)
-        customers = {}
-        # do all events
-        while not len(self._events) == 0:
-            # calculate statistics
-
-            # get next event
-            current_event = self._events.pop()
-
-            # I think the event timestamp is the current time
-            stats['total_time'] = current_event.timestamp
-
-            if isinstance(current_event, CustomerArrival):
-                stats['num_customers'] += 1
-                l = []
-                l.append(current_event.timestamp)
-                l.append(-1)
-                customers[current_event.customer] = l
-            elif isinstance(current_event, CheckoutCompleted):
-                customers[current_event.customer][1] = current_event.timestamp
+        # customers = {}
+        # # old stuff: did not correctly spawn new events
+        # # do all events
+        # while not len(self._events) == 0:
+        #     # calculate statistics
+        #
+        #     # get next event
+        # current_event = self._events.pop()
+        #
+        # # I think the event timestamp is the current time
+        # stats['total_time'] = current_event.timestamp
+        #
+        # if isinstance(current_event, CustomerArrival):
+        #     stats['num_customers'] += 1
+        #     l = []
+        #     l.append(current_event.timestamp)
+        #     l.append(-1)
+        #     customers[current_event.customer] = l
+        # elif isinstance(current_event, CheckoutCompleted):
+        #     customers[current_event.customer][1] = current_event.timestamp
 
         #  calculate max wait time
         for key in customers:
-            print("---------------------")
-            print(key)
-            print(customers[key])
-            print(customers[key][0])
-            print(customers[key][1])
+            # print("---------------------")
+            # print(key)
+            # print(customers[key])
+            # print(customers[key][0])
+            # print(customers[key][1])
             wait_time = customers[key][1] - customers[key][0]
             if wait_time > stats['max_wait']:
                 stats['max_wait'] = wait_time
@@ -141,8 +154,10 @@ if __name__ == '__main__':
     event_file.close()
     print(sim_stats)
     import doctest
+
     doctest.testmod()
     import python_ta
+
     python_ta.check_all(config={
         'allowed-import-modules': ['__future__', 'typing', 'event', 'store',
                                    'container', 'python_ta', 'doctest']})
