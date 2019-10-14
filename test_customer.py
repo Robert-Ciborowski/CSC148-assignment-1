@@ -21,14 +21,38 @@ Copyright (c) 2019 Jacqueline Smith
 from store import Customer, Item
 
 
-# TODO: write your test functions for Customer here
-
 def test_customer_init() -> None:
     item_list = [Item('bananas', 7)]
     belinda = Customer('Belinda', item_list)
     assert belinda.name == 'Belinda'
     assert belinda._items == item_list
     assert belinda.arrival_time == -1
+
+
+def test_customer_num_items_empty() -> None:
+    item_list = []
+    belinda = Customer('Belinda', item_list)
+    assert belinda.num_items() == 0
+
+
+def test_customer_num_items_many() -> None:
+    item_list = [Item('bananas', 1), Item('apples', 2), Item('kiwis', 3),
+                 Item('strawberries', 4), Item('guavas', 5), Item('oranges', 6)]
+    belinda = Customer('Belinda', item_list)
+    assert belinda.num_items() == 6
+
+
+def test_customer_get_item_time_no_items() -> None:
+    item_list = []
+    belinda = Customer('Belinda', item_list)
+    assert belinda.get_item_time() == 0
+
+
+def test_customer_get_item_time_many_items() -> None:
+    item_list = [Item('bananas', 1), Item('apples', 2), Item('kiwis', 3),
+                 Item('strawberries', 4), Item('guavas', 5), Item('oranges', 6)]
+    belinda = Customer('Belinda', item_list)
+    assert belinda.get_item_time() == 21
 
 
 if __name__ == '__main__':

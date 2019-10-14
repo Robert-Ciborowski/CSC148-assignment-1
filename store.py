@@ -196,6 +196,8 @@ class Customer:
         return time
 
 
+# TODO: WHAT IF THE ITEM TIME IS NEGATIVE??? Is that assumed to never happen
+#  according to Quercus assignment page?
 class Item:
     """A class to represent an item to be checked out.
 
