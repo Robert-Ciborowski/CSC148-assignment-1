@@ -30,6 +30,9 @@ GROCERY_STORE_2 = '{\n  "regular_count": 1,\n   "express_count": 1,\n   ' \
 GROCERY_STORE_3 = '{\n  "regular_count": 1,\n   "express_count": 1,\n   ' \
                   '"self_serve_count": 1,\n   "line_capacity": 2\n}'
 
+GROCERY_STORE_4 = '{\n  "regular_count": 1,\n   "express_count": 0,\n   ' \
+                  '"self_serve_count": 0,\n   "line_capacity": 2\n}'
+
 EXPRESS_LIMIT = 7
 
 
@@ -44,6 +47,8 @@ def test_grocery_store_init() -> None:
     assert store._express_count == 2
     assert store._self_serve_count == 4
     assert len(store._lines) == 9
+    for line in store._lines:
+        assert line._capacity == 10
 
 
 def test_enter_line() -> None:
@@ -71,38 +76,54 @@ def test_enter_line() -> None:
 
 
 def test_line_is_ready() -> None:
-    store = GroceryStore(GROCERY_STORE_2)
-    assert len(store._lines) == 2
-    assert store.line_is_ready(0)
-    assert store.line_is_ready(1)
-    assert store.line_is_ready(0)
-    assert len(store._lines) == 2
+    store = GroceryStore(GROCERY_STORE)
+    assert len(store._lines) == 9
+    assert not store.line_is_ready(0)
+    assert not store.line_is_ready(1)
+    assert not store.line_is_ready(2)
+    assert len(store._lines) == 9
     item_list = [Item('bananas', 6)]
     belinda = Customer('Belinda', item_list)
-    store.enter_line(belinda)
+    arnold = Customer('Arnold', item_list)
+    charlie = Customer('Charlie', item_list)
+    store._lines[1].accept(belinda)
+    store._lines[2].accept(charlie)
+    store._lines[2].accept(arnold)
     assert not store.line_is_ready(0)
     assert store.line_is_ready(1)
-    assert len(store._lines) == 2
+    assert not store.line_is_ready(2)
+    assert len(store._lines) == 9
 
 
 def test_start_checkout() -> None:
-    store = GroceryStore(GROCERY_STORE_2)
+    store = GroceryStore(GROCERY_STORE_3)
     assert store.start_checkout(0) == 0
     assert len(store._lines[0]) == 0
     item_list = [Item('bananas', 6)]
     belinda = Customer('Belinda', item_list)
+    item_list_2 = [Item('apples', 6), Item('bananas', 5), Item('oranges', 4)]
+    charlie = Customer('Charlie', item_list_2)
     store.enter_line(belinda)
+    store.enter_line(charlie)
+    daniel = Customer('Daniel', item_list)
+    store._lines[0].accept(daniel)
     assert store.start_checkout(0) == 6
-    assert len(store._lines[0]) == 1
+    assert store.start_checkout(1) == 15
+    assert len(store._lines[0]) == 2
+    assert len(store._lines[1]) == 1
+    assert len(store._lines[2]) == 0
 
 
 def test_complete_checkout() -> None:
-    store = GroceryStore(GROCERY_STORE_2)
-    assert store.complete_checkout(0) == 0
+    store = GroceryStore(GROCERY_STORE_4)
+    assert store.complete_checkout(0) is False
     item_list = [Item('bananas', 6)]
     belinda = Customer('Belinda', item_list)
     store.enter_line(belinda)
-    assert store.complete_checkout(0) == 1
+    charlie = Customer('Charlie', item_list)
+    store.enter_line(charlie)
+    assert store.complete_checkout(0) is True
+    assert store.complete_checkout(0) is False
 
 
 def test_close_line() -> None:

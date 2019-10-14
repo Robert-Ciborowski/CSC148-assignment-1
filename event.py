@@ -315,10 +315,13 @@ def create_event_list(event_file: TextIO) -> List[Event]:
 
     return events
 
+
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()
     import python_ta
+
     python_ta.check_all(config={
         'allowed-import-modules': ['__future__', 'typing', 'store',
                                    'python_ta', 'doctest']})

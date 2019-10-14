@@ -58,7 +58,6 @@ class GroceryStore:
         self._express_count = j['express_count']
         self._self_serve_count = j['self_serve_count']
         line_capacity = j['line_capacity']
-        # review this to avoid off by one errors
         i = 0
         while i < self._regular_count:
             self._lines.append(RegularLine(line_capacity))
@@ -88,7 +87,7 @@ class GroceryStore:
         index = -1
         for i in range(len(self._lines)):
             curr_length = len(self._lines[i])
-            if curr_length == self._lines[i].capacity:
+            if self._lines[i].is_at_capacity():
                 continue
             if curr_length < smallest_length:
                 if self._lines[i].can_accept(customer):
@@ -102,37 +101,23 @@ class GroceryStore:
         """Return True iff checkout line <line_number> is ready to start a
         checkout.
         """
-        # does this mean when the checkout line can accept a new customer or
-        # when it is ready to process the first customer in the queue?
-
-        # maybe along the latter lines it refers to enough time having passed
-        # since the previously processed customer
-
-        # even though the latter feels like a better description of the
-        # header, I'm gonna implement the former as it seems to match the
-        # other methods in this class
-        answer = False
-        if len(self._lines[line_number]) < self._lines[line_number].capacity:
-            answer = True
-        return answer
+        # read Piazza FAQ to figure out implementation
+        # but not sure why
+        return len(self._lines[line_number]) == 1
 
     def start_checkout(self, line_number: int) -> int:
         """Return the time it will take to check out the next customer in
         line <line_number>
         """
-        # I think I also need to put the customer in the line
-        # no this method doesn't have a customer parameter:
-        # it's someone else's problem
         return self._lines[line_number].start_checkout()
 
-    def complete_checkout(self, line_number: int) -> int:
-        """Return the number of customers remaining to be checked out in line
-        <line_number>
+    def complete_checkout(self, line_number: int) -> bool:
+        """Return True iff there are customers remaining to be checked out in
+        line <line_number>
         """
         # I don't see yet how the function described in the docstring relates
         # to completing the checkout
-
-        return len(self._lines[line_number])
+        return self._lines[line_number].complete_checkout()
 
     def close_line(self, line_number: int) -> List[Customer]:
         """Close checkout line <line_number> and return the customers from
@@ -263,8 +248,8 @@ class CheckoutLine:
     - The number of customers is less than or equal to capacity.
     """
     # do these need to be private?
-    capacity: int
-    is_open: bool
+    _capacity: int
+    _is_open: bool
     _queue: List[Customer]
 
     def __init__(self, capacity: int) -> None:
@@ -278,9 +263,9 @@ class CheckoutLine:
         >>> line.queue
         []
         """
-        self.is_open = True
+        self._is_open = True
         self._queue = []
-        self.capacity = capacity
+        self._capacity = capacity
 
     def __len__(self) -> int:
         """Return the size of this CheckoutLine.
@@ -290,9 +275,9 @@ class CheckoutLine:
     def can_accept(self, customer: Customer) -> bool:
         """Return True iff this CheckoutLine can accept <customer>.
         """
-        if not self.is_open:
+        if not self._is_open:
             return False
-        if len(self) < self.capacity:
+        if len(self) < self._capacity:
             return True
         return False
 
@@ -333,6 +318,9 @@ class CheckoutLine:
 
         Return whether there are any remaining customers in the line.
         """
+        # takes first customer out of queue
+        if len(self._queue) > 0:
+            self._queue.pop(0)
         return self._queue != []
 
     def close(self) -> List[Customer]:
@@ -342,16 +330,20 @@ class CheckoutLine:
         """
         # Also mutates queue
         moved_customers = []
-        self.is_open = False
+        self._is_open = False
         # if we don't want to mutate queue, just traverse self.queue and
         # append each to moved_customers
-        for i in range(len(self) - 1):
-            moved_customers.append(self._queue.pop())
+        for i in range(1, len(self)):
+            moved_customers.append(self._queue.pop(1))
         return moved_customers
 
-    # new method
+    # new method, I think they missed this one
     def get_first_in_line(self) -> Customer:
         return self._queue[0]
+
+    # new method
+    def is_at_capacity(self) -> bool:
+        return len(self) == self._capacity
 
 
 # TODO: implement the following subclasses of CheckoutLine
