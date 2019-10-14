@@ -51,8 +51,8 @@ class GroceryStore:
         """
         text = ""
         self._lines = []
-        for str in config_file:
-            text += str
+        for s in config_file:
+            text += s
         j = json.loads(text)
         self._regular_count = j['regular_count']
         self._express_count = j['express_count']
@@ -111,13 +111,18 @@ class GroceryStore:
         # even though the latter feels like a better description of the
         # header, I'm gonna implement the former as it seems to match the
         # other methods in this class
-        return self._lines[line_number].can_accept()
+        answer = False
+        if len(self._lines[line_number]) < self._lines[line_number].capacity:
+            answer = True
+        return answer
 
     def start_checkout(self, line_number: int) -> int:
         """Return the time it will take to check out the next customer in
         line <line_number>
         """
         # I think I also need to put the customer in the line
+        # no this method doesn't have a customer parameter:
+        # it's someone else's problem
         return self._lines[line_number].start_checkout()
 
     def complete_checkout(self, line_number: int) -> int:
@@ -140,8 +145,9 @@ class GroceryStore:
         """Return the first customer in line <line_number>, or None if there
         are no customers in line.
         """
-        if not len(self._lines[line_number].queue) == 0:
-            return self._lines[line_number].queue[0]
+        if not len(self._lines[line_number]) == 0:
+            # todo: change queue to private
+            return self._lines[line_number].get_first_in_line()
         return None
 
 
@@ -258,9 +264,10 @@ class CheckoutLine:
     - Each customer in this line has not been checked out yet.
     - The number of customers is less than or equal to capacity.
     """
+    # do these need to be private?
     capacity: int
     is_open: bool
-    queue: List[Customer]
+    _queue: List[Customer]
 
     def __init__(self, capacity: int) -> None:
         """Initialize an open and empty CheckoutLine.
@@ -274,13 +281,13 @@ class CheckoutLine:
         []
         """
         self.is_open = True
-        self.queue = []
+        self._queue = []
         self.capacity = capacity
 
     def __len__(self) -> int:
         """Return the size of this CheckoutLine.
         """
-        return len(self.queue)
+        return len(self._queue)
 
     def can_accept(self, customer: Customer) -> bool:
         """Return True iff this CheckoutLine can accept <customer>.
@@ -307,7 +314,7 @@ class CheckoutLine:
         """
         if not self.can_accept(customer):
             return False
-        self.queue.append(customer)
+        self._queue.append(customer)
         return True
 
     def start_checkout(self) -> int:
@@ -319,16 +326,16 @@ class CheckoutLine:
         # this assumes self.queue is non empty
         # TODO: Add a precondition saying it should not be empty??????
         # Or are we not allowed to modify headers.
-        if len(self.queue) == 0:
+        if len(self._queue) == 0:
             return 0
-        return self.queue[0].get_item_time()
+        return self._queue[0].get_item_time()
 
     def complete_checkout(self) -> bool:
         """Finish the checkout for this CheckoutLine.
 
         Return whether there are any remaining customers in the line.
         """
-        return self.queue != []
+        return self._queue != []
 
     def close(self) -> List[Customer]:
         """Close this line.
@@ -341,8 +348,12 @@ class CheckoutLine:
         # if we don't want to mutate queue, just traverse self.queue and
         # append each to moved_customers
         for i in range(len(self) - 1):
-            moved_customers.append(self.queue.pop())
+            moved_customers.append(self._queue.pop())
         return moved_customers
+
+    # new method
+    def get_first_in_line(self) -> Customer:
+        return self._queue[0]
 
 
 # TODO: implement the following subclasses of CheckoutLine

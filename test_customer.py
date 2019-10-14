@@ -32,14 +32,14 @@ def test_customer_init() -> None:
 def test_customer_num_items_empty() -> None:
     item_list = []
     belinda = Customer('Belinda', item_list)
-    assert belinda.num_tiems() == 0
+    assert belinda.num_items() == 0
 
 
 def test_customer_num_items_many() -> None:
     item_list = [Item('bananas', 1), Item('apples', 2), Item('kiwis', 3),
                  Item('strawberries', 4), Item('guavas', 5), Item('oranges', 6)]
     belinda = Customer('Belinda', item_list)
-    assert belinda.num_tiems() == 6
+    assert belinda.num_items() == 6
 
 
 def test_customer_get_item_time_no_items() -> None:
