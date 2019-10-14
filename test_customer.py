@@ -18,10 +18,20 @@ Author: Jacqueline Smith
 All of the files in this directory and all subdirectories are:
 Copyright (c) 2019 Jacqueline Smith
 """
-from store import Customer
+from store import Customer, Item
+
 
 # TODO: write your test functions for Customer here
 
+def test_customer_init() -> None:
+    item_list = [Item('bananas', 7)]
+    belinda = Customer('Belinda', item_list)
+    assert belinda.name == 'Belinda'
+    assert belinda._items == item_list
+    assert belinda.arrival_time == -1
+
+
 if __name__ == '__main__':
     import pytest
+
     pytest.main(['test_customer.py'])

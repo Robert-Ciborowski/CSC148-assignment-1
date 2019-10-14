@@ -22,7 +22,7 @@ Copyright (c) 2019 Jacqueline Smith
 from __future__ import annotations
 from typing import List, Optional, TextIO
 import json
-from assignments.a1.container import PriorityQueue
+from container import PriorityQueue
 
 # Use this constant in your code
 EXPRESS_LIMIT = 7
@@ -91,8 +91,11 @@ class GroceryStore:
             if curr_length == self._lines[i].capacity:
                 continue
             if curr_length < smallest_length:
-                smallest_length = curr_length
-                index = i
+                if self._lines[index].can_accept(customer):
+                    smallest_length = curr_length
+                    index = i
+        if index != -1:
+            self._lines[index].accept(customer)
         return index
 
     def line_is_ready(self, line_number: int) -> bool:
@@ -114,6 +117,7 @@ class GroceryStore:
         """Return the time it will take to check out the next customer in
         line <line_number>
         """
+        # I think I also need to put the customer in the line
         return self._lines[line_number].start_checkout()
 
     def complete_checkout(self, line_number: int) -> int:
@@ -299,7 +303,7 @@ class CheckoutLine:
         >>> line.queue == [c1]
         True
         """
-        if not self.can_accept():
+        if not self.can_accept(customer):
             return False
         self.queue.append(customer)
         return True
@@ -358,7 +362,7 @@ class ExpressLine(CheckoutLine):
     """
 
     def can_accept(self, customer: Customer) -> bool:
-        if len(self) < EXPRESS_LIMIT:
+        if customer.num_items() < EXPRESS_LIMIT:
             return CheckoutLine.can_accept(self, customer)
         return False
 
