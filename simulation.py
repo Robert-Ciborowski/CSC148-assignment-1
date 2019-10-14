@@ -96,6 +96,8 @@ class GroceryStoreSimulation:
             while not len(new_events) == 0:
                 self._events.add(new_events.pop())
 
+            stats['total_time'] = event.timestamp
+
         # we will track each customer's arrival and departure times
         # I am assuming each customer has a unique id in memory,
         # ie no one customer has two customer objects

@@ -27,6 +27,8 @@ GROCERY_STORE = '{\n  "regular_count": 3,\n   "express_count": 2,\n   ' \
 GROCERY_STORE_2 = '{\n  "regular_count": 1,\n   "express_count": 1,\n   ' \
                 '"self_serve_count": 0,\n   "line_capacity": 1\n}'
 
+EXPRESS_LIMIT = 7
+
 
 # TODO: write your test functions for GroceryStore here
 # Note - your tests should use StringIO to simulate opening a configuration file
@@ -42,14 +44,12 @@ def test_grocery_store_init() -> None:
 
 
 def test_enter_line() -> None:
+    # Todo: this tests many properties of enter_line, split up test cases
     store = GroceryStore(StringIO(GROCERY_STORE_2))
     item_list = [Item('bananas', 7), Item('bananas', 7), Item('bananas', 7),
                  Item('bananas', 7), Item('bananas', 7), Item('bananas', 7),
                  Item('bananas', 7), Item('bananas', 7)]
     belinda = Customer('Belinda', item_list)
-    # , Item('bananas', 7), Item('bananas', 7),
-    #                  Item('bananas', 7), Item('bananas', 7), Item('bananas', 7),
-    #                  Item('bananas', 7), Item('bananas', 7)
     item_list_2 = [Item('apples', 6)]
     arnold = Customer('Arnold', item_list_2)
     item_list_3 = [Item('carrots', 5), Item('carrots', 5), Item('carrots', 5),
@@ -63,8 +63,15 @@ def test_enter_line() -> None:
     assert store.enter_line(charlie) == -1
     assert store.enter_line(arnold) == 1
     assert store.enter_line(david) == -1
+    assert store.enter_line(elijah) == -1
     # taking for granted that lines work properly
 
+
+def test_line_is_ready() -> None:
+    store = GroceryStore(GROCERY_STORE_2)
+    assert store.line_is_ready(0)
+    assert store.line_is_ready(1)
+    pass
 
 if __name__ == '__main__':
     import pytest

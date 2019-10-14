@@ -65,7 +65,7 @@ class GroceryStore:
             i += 1
         i = 0
         while i < self._express_count:
-            self._lines.append(ExpressLine(EXPRESS_LIMIT))
+            self._lines.append(ExpressLine(line_capacity))
             i += 1
         i = 0
         while i < self._self_serve_count:
@@ -91,7 +91,7 @@ class GroceryStore:
             if curr_length == self._lines[i].capacity:
                 continue
             if curr_length < smallest_length:
-                if self._lines[index].can_accept(customer):
+                if self._lines[i].can_accept(customer):
                     smallest_length = curr_length
                     index = i
         if index != -1:
@@ -362,7 +362,7 @@ class ExpressLine(CheckoutLine):
     """
 
     def can_accept(self, customer: Customer) -> bool:
-        if customer.num_items() < EXPRESS_LIMIT:
+        if customer.num_items() <= EXPRESS_LIMIT:
             return CheckoutLine.can_accept(self, customer)
         return False
 
