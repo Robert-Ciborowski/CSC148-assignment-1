@@ -21,7 +21,7 @@ Copyright (c) 2019 Jacqueline Smith
 """
 from __future__ import annotations
 from typing import List, TextIO
-from store import GroceryStore, Customer, Item
+from store import Customer, Item
 
 
 class Event:

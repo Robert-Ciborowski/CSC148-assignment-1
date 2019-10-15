@@ -81,7 +81,7 @@ class GroceryStoreSimulation:
             if isinstance(event, CustomerArrival):
                 # This checks to see if the customer is in the customers
                 # dictionary since the "max_wait" calculation is based on the
-                # first line a customer arrives at.
+                # customer arriving at the wait area.
                 if event.customer not in customers:
                     customers[event.customer] = [event.timestamp, -1]
                     stats['num_customers'] += 1

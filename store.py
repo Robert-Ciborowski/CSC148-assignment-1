@@ -86,6 +86,9 @@ class GroceryStore:
         if len(self._lines) == 0:
             return -1
 
+        # The following loop looks through the checkout lines in the store,
+        # to find the index of he one with the smallest length.
+
         # Arbitrary big length:
         smallest_length = 80000000000000000000000000000
         index = -1
@@ -305,6 +308,10 @@ class CheckoutLine:
         """Checkout the next customer in this CheckoutLine.
 
         Return the time it will take to checkout the next customer.
+
+        === Precondition ===
+        self.queue is nonempty:
+        This checkout line has a customer in it.
         """
         if len(self.queue) == 0:
             return 0
@@ -375,6 +382,7 @@ if __name__ == '__main__':
     import doctest
 
     doctest.testmod()
+
     import python_ta
 
     python_ta.check_all(config={
