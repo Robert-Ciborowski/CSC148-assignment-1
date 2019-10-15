@@ -180,9 +180,9 @@ class CustomerArrival(Event):
         else:
             timestamp = 0
 
-            # Create an event that checks out the customer if they are at the
-            # front of the line.
-            if store.get_first_in_line(line) is None:
+            # Create an event that checks out the customer if they are the
+            # only customer in the line.
+            if store.line_is_ready(line):
                 return [CheckoutStarted(timestamp, line)]
 
             return []

@@ -28,7 +28,7 @@ def test_checkout_line_init() -> None:
     line = CheckoutLine(5)
     assert line.capacity == 5
     assert line.is_open
-    assert line._queue == []
+    assert line.queue == []
 
 
 def test_checkout_line_len_empty() -> None:

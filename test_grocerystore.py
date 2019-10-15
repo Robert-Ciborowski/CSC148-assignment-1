@@ -48,7 +48,7 @@ def test_grocery_store_init() -> None:
     assert store._self_serve_count == 4
     assert len(store._lines) == 9
     for line in store._lines:
-        assert line._capacity == 10
+        assert line.capacity == 10
 
 
 def test_enter_line() -> None:

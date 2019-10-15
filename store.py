@@ -22,17 +22,11 @@ Copyright (c) 2019 Jacqueline Smith
 from __future__ import annotations
 from typing import List, Optional, TextIO
 import json
-from container import PriorityQueue
 
 # Use this constant in your code
 EXPRESS_LIMIT = 7
 
 
-# TODO: Complete the GroceryStore class and methods according to the docstrings
-# You may add private attributes and helper methods, but do not change the
-# public interface.
-# Write docstrings for all methods you write, and document your attributes
-# in the class docstring.
 class GroceryStore:
     """A grocery store.
     === Attributes ===
@@ -51,22 +45,32 @@ class GroceryStore:
         """
         text = ""
         self._lines = []
+
         for s in config_file:
             text += s
+
+        # This loads our json data and then accesses it to find out our line
+        # counts.
         j = json.loads(text)
         self._regular_count = j['regular_count']
         self._express_count = j['express_count']
         self._self_serve_count = j['self_serve_count']
         line_capacity = j['line_capacity']
         i = 0
+
+        # These loops construct our lines.
         while i < self._regular_count:
             self._lines.append(RegularLine(line_capacity))
             i += 1
+
         i = 0
+
         while i < self._express_count:
             self._lines.append(ExpressLine(line_capacity))
             i += 1
+
         i = 0
+
         while i < self._self_serve_count:
             self._lines.append(SelfServeLine(line_capacity))
             i += 1
@@ -79,30 +83,36 @@ class GroceryStore:
 
         Return -1 if there is no line available for the customer to join.
         """
-        # I introduced _lines, is the index of the line there the same index
-        # that's referred to in the docstring?
+        if len(self._lines) == 0:
+            return -1
 
-        # arbitrary BIG length
-        smallest_length = 8000000000
+        # Arbitrary big length:
+        smallest_length = 80000000000000000000000000000
         index = -1
+
         for i in range(len(self._lines)):
             curr_length = len(self._lines[i])
+
             if self._lines[i].is_at_capacity():
                 continue
+
             if curr_length < smallest_length:
                 if self._lines[i].can_accept(customer):
                     smallest_length = curr_length
                     index = i
+
         if index != -1:
             self._lines[index].accept(customer)
+
         return index
 
     def line_is_ready(self, line_number: int) -> bool:
         """Return True iff checkout line <line_number> is ready to start a
         checkout.
         """
-        # read Piazza FAQ to figure out implementation
-        # but not sure why
+        # Note: according to the prof (through Piazza), a line "is ready"
+        # if it has one customer. This method is meant to be used in
+        # CustomerArrival.
         return len(self._lines[line_number]) == 1
 
     def start_checkout(self, line_number: int) -> int:
@@ -115,15 +125,12 @@ class GroceryStore:
         """Return True iff there are customers remaining to be checked out in
         line <line_number>
         """
-        # I don't see yet how the function described in the docstring relates
-        # to completing the checkout
         return self._lines[line_number].complete_checkout()
 
     def close_line(self, line_number: int) -> List[Customer]:
         """Close checkout line <line_number> and return the customers from
         that line who are still waiting to be checked out.
         """
-
         return self._lines[line_number].close()
 
     def get_first_in_line(self, line_number: int) -> Optional[Customer]:
@@ -131,17 +138,10 @@ class GroceryStore:
         are no customers in line.
         """
         if not len(self._lines[line_number]) == 0:
-            # todo: change queue to private
             return self._lines[line_number].get_first_in_line()
         return None
 
 
-# TODO: Complete the methods in Customer according to their docstrings
-# You should use the existing attributes in your solution. However, if you need
-# to, you may add private attributes and helper methods, but do not change the
-# public interface.
-# Write docstrings for all methods you write, and document your attributes
-# in the class docstring.
 class Customer:
     """A grocery store customer.
 
@@ -196,8 +196,6 @@ class Customer:
         return time
 
 
-# TODO: WHAT IF THE ITEM TIME IS NEGATIVE??? Is that assumed to never happen
-#  according to Quercus assignment page?
 class Item:
     """A class to represent an item to be checked out.
 
@@ -232,8 +230,6 @@ class Item:
         return self._time
 
 
-# TODO: Complete the CheckoutLine class and methods according to the docstrings
-# Do not add any new attributes or methods (public or private) to this class.
 class CheckoutLine:
     """A checkout line in a grocery store.
 
@@ -250,9 +246,9 @@ class CheckoutLine:
     - The number of customers is less than or equal to capacity.
     """
     # do these need to be private?
-    _capacity: int
-    _is_open: bool
-    _queue: List[Customer]
+    capacity: int
+    is_open: bool
+    queue: List[Customer]
 
     def __init__(self, capacity: int) -> None:
         """Initialize an open and empty CheckoutLine.
@@ -265,21 +261,21 @@ class CheckoutLine:
         >>> line.queue
         []
         """
-        self._is_open = True
-        self._queue = []
-        self._capacity = capacity
+        self.is_open = True
+        self.queue = []
+        self.capacity = capacity
 
     def __len__(self) -> int:
         """Return the size of this CheckoutLine.
         """
-        return len(self._queue)
+        return len(self.queue)
 
     def can_accept(self, customer: Customer) -> bool:
         """Return True iff this CheckoutLine can accept <customer>.
         """
-        if not self._is_open:
+        if not self.is_open:
             return False
-        if len(self) < self._capacity:
+        if len(self) < self.capacity:
             return True
         return False
 
@@ -299,7 +295,7 @@ class CheckoutLine:
         """
         if not self.can_accept(customer):
             return False
-        self._queue.append(customer)
+        self.queue.append(customer)
         return True
 
     def start_checkout(self) -> int:
@@ -311,9 +307,9 @@ class CheckoutLine:
         # this assumes self.queue is non empty
         # TODO: Add a precondition saying it should not be empty??????
         # Or are we not allowed to modify headers.
-        if len(self._queue) == 0:
+        if len(self.queue) == 0:
             return 0
-        return self._queue[0].get_item_time()
+        return self.queue[0].get_item_time()
 
     def complete_checkout(self) -> bool:
         """Finish the checkout for this CheckoutLine.
@@ -321,9 +317,9 @@ class CheckoutLine:
         Return whether there are any remaining customers in the line.
         """
         # takes first customer out of queue
-        if len(self._queue) > 0:
-            self._queue.pop(0)
-        return self._queue != []
+        if len(self.queue) > 0:
+            self.queue.pop(0)
+        return self.queue != []
 
     def close(self) -> List[Customer]:
         """Close this line.
@@ -332,20 +328,20 @@ class CheckoutLine:
         """
         # Also mutates queue
         moved_customers = []
-        self._is_open = False
+        self.is_open = False
         # if we don't want to mutate queue, just traverse self.queue and
         # append each to moved_customers
         for i in range(1, len(self)):
-            moved_customers.append(self._queue.pop(1))
+            moved_customers.append(self.queue.pop(1))
         return moved_customers
 
     # new method, I think they missed this one
     def get_first_in_line(self) -> Customer:
-        return self._queue[0]
+        return self.queue[0]
 
     # new method
     def is_at_capacity(self) -> bool:
-        return len(self) == self._capacity
+        return len(self) == self.capacity
 
 
 # TODO: implement the following subclasses of CheckoutLine
