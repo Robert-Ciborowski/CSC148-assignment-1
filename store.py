@@ -92,12 +92,13 @@ class GroceryStore:
 
         for i in range(len(self._lines)):
             curr_length = len(self._lines[i])
+            line = self._lines[i]
 
-            if self._lines[i].is_at_capacity():
+            if len(line) == line.capacity:
                 continue
 
             if curr_length < smallest_length:
-                if self._lines[i].can_accept(customer):
+                if line.can_accept(customer):
                     smallest_length = curr_length
                     index = i
 
@@ -138,7 +139,7 @@ class GroceryStore:
         are no customers in line.
         """
         if not len(self._lines[line_number]) == 0:
-            return self._lines[line_number].get_first_in_line()
+            return self._lines[line_number].queue[0]
         return None
 
 
@@ -245,7 +246,6 @@ class CheckoutLine:
     - Each customer in this line has not been checked out yet.
     - The number of customers is less than or equal to capacity.
     """
-    # do these need to be private?
     capacity: int
     is_open: bool
     queue: List[Customer]
@@ -275,8 +275,10 @@ class CheckoutLine:
         """
         if not self.is_open:
             return False
+
         if len(self) < self.capacity:
             return True
+
         return False
 
     def accept(self, customer: Customer) -> bool:
@@ -295,6 +297,7 @@ class CheckoutLine:
         """
         if not self.can_accept(customer):
             return False
+
         self.queue.append(customer)
         return True
 
@@ -303,12 +306,9 @@ class CheckoutLine:
 
         Return the time it will take to checkout the next customer.
         """
-        # does not mutate queue
-        # this assumes self.queue is non empty
-        # TODO: Add a precondition saying it should not be empty??????
-        # Or are we not allowed to modify headers.
         if len(self.queue) == 0:
             return 0
+
         return self.queue[0].get_item_time()
 
     def complete_checkout(self) -> bool:
@@ -316,9 +316,10 @@ class CheckoutLine:
 
         Return whether there are any remaining customers in the line.
         """
-        # takes first customer out of queue
+        # This takes the first customer out of the queue.
         if len(self.queue) > 0:
             self.queue.pop(0)
+
         return self.queue != []
 
     def close(self) -> List[Customer]:
@@ -326,31 +327,15 @@ class CheckoutLine:
 
         Return a list of all customers that need to be moved to another line.
         """
-        # Also mutates queue
+        # Note: this mutates the queue.
         moved_customers = []
         self.is_open = False
-        # if we don't want to mutate queue, just traverse self.queue and
-        # append each to moved_customers
-        for i in range(1, len(self)):
+
+        while len(self) > 1:
             moved_customers.append(self.queue.pop(1))
+
         return moved_customers
 
-    # new method, I think they missed this one
-    def get_first_in_line(self) -> Customer:
-        return self.queue[0]
-
-    # new method
-    def is_at_capacity(self) -> bool:
-        return len(self) == self.capacity
-
-
-# TODO: implement the following subclasses of CheckoutLine
-# Only implement those methods that cannot be used exactly as inherited
-# from the superclass.
-# You may add private attributes and helper methods, but do not change the
-# public interface of the subclasses.
-# Write docstrings for all methods you write, and document your attributes
-# in the class docstring.
 
 class RegularLine(CheckoutLine):
     """A regular CheckoutLine."""
@@ -363,6 +348,10 @@ class ExpressLine(CheckoutLine):
     """
 
     def can_accept(self, customer: Customer) -> bool:
+        """Return True iff this CheckoutLine can accept <customer>. Note that
+        for <customer> to be accepted, they must have less than a certain amount
+        of items.
+        """
         if customer.num_items() <= EXPRESS_LIMIT:
             return CheckoutLine.can_accept(self, customer)
         return False
@@ -375,6 +364,10 @@ class SelfServeLine(CheckoutLine):
     """
 
     def start_checkout(self) -> int:
+        """Checkout the next customer in this CheckoutLine.
+
+        Return the time it will take to checkout the next customer.
+        """
         return 2 * CheckoutLine.start_checkout(self)
 
 

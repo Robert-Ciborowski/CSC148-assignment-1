@@ -57,91 +57,51 @@ class GroceryStoreSimulation:
         Return a dictionary containing statistics of the simulation,
         according to the specifications in the assignment handout.
         """
-        # I think they mean <self._events> instead of <initial_events>
-        # I don't know what <initial_events> is
-
-        # actually I think <initial_events> might be in <file> but I
-        # don't know anything about that
-
-        # Initialize statistics
+        # This initializes statistics.
         stats = {
             'num_customers': 0,
             'total_time': 0,
             'max_wait': -1
         }
-        # outlining steps
 
-        # fill self._events from file
+        # This fills self._events from file.
         event_list = create_event_list(file)
 
         while len(event_list) != 0:
             self._events.add(event_list.pop())
 
+        # This keeps track of customer start and end times. This is used to
+        # calculate the maximum wait time.
         customers = {}
 
         while not self._events.is_empty():
             event = self._events.remove()
 
+            # This checks to see the event type.
             if isinstance(event, CustomerArrival):
-                stats['num_customers'] += 1
-                times = []
-                times.append(event.timestamp)
-                times.append(-1)
-                customers[event.customer] = times
+                # This checks to see if the customer is in the customers
+                # dictionary since the "max_wait" calculation is based on the
+                # first line a customer arrives at.
+                if event.customer not in customers:
+                    customers[event.customer] = [event.timestamp, -1]
+                    stats['num_customers'] += 1
             elif isinstance(event, CheckoutCompleted):
                 customers[event.customer][1] = event.timestamp
 
             new_events = event.do(self._store)
 
+            # This adds the new events.
             while not len(new_events) == 0:
                 self._events.add(new_events.pop())
 
             stats['total_time'] = event.timestamp
 
-        # we will track each customer's arrival and departure times
-        # I am assuming each customer has a unique id in memory,
-        # ie no one customer has two customer objects
-        # (also assuming that no two customers have same id,
-        # but this seems reasonable)
-        # customers = {}
-        # # old stuff: did not correctly spawn new events
-        # # do all events
-        # while not len(self._events) == 0:
-        #     # calculate statistics
-        #
-        #     # get next event
-        # current_event = self._events.pop()
-        #
-        # # I think the event timestamp is the current time
-        # stats['total_time'] = current_event.timestamp
-        #
-        # if isinstance(current_event, CustomerArrival):
-        #     stats['num_customers'] += 1
-        #     l = []
-        #     l.append(current_event.timestamp)
-        #     l.append(-1)
-        #     customers[current_event.customer] = l
-        # elif isinstance(current_event, CheckoutCompleted):
-        #     customers[current_event.customer][1] = current_event.timestamp
-
-        #  calculate max wait time
+        #  This calculates the maximum wait time.
         for key in customers:
-            # print("---------------------")
-            # print(key)
-            # print(customers[key])
-            # print(customers[key][0])
-            # print(customers[key][1])
             wait_time = customers[key][1] - customers[key][0]
+
             if wait_time > stats['max_wait']:
                 stats['max_wait'] = wait_time
-
-        # I think we need to track each customer,
-        # to monitor their wait times
-
-        # do we track from arrival or from joining line?
-        # assuming arrival
-
-        # TODO: test these stats
 
         return stats
 

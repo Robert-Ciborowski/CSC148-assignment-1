@@ -130,7 +130,7 @@ def test_checkout_close_many_customers() -> None:
     line = CheckoutLine(3)
     item_list = [Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
-    item_list_2 = [Item('apples', 1)]
+    item_list_2 = [Item('apples', 2)]
     sofia = Customer('Sofia', item_list_2)
     item_list_3 = [Item('kiwis', 1)]
     aela = Customer('Aela', item_list_3)
@@ -138,7 +138,7 @@ def test_checkout_close_many_customers() -> None:
     line.accept(sofia)
     line.accept(aela)
     moved_customers = line.close()
-    assert sofia in moved_customers and aela in moved_customers
+    assert moved_customers == [sofia, aela]
 
 
 def test_express_line_accept_enough_items() -> None:
@@ -177,7 +177,6 @@ def test_self_serve_line_start_checkout_many_items() -> None:
     jeff = Customer('Jeff', item_list)
     line.accept(jeff)
     assert line.start_checkout() == 12
-
 
 
 def test_close_line() -> None:

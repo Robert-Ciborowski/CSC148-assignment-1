@@ -122,10 +122,9 @@ class PriorityQueue(Container):
         >>> pq._items
         ['arju', 'fred', 'hana', 'mona']
         """
-        # TODO: test this method.
         for i in range(len(self._items)):
             if item < self._items[i]:
-                self._items.insert(item, i)
+                self._items.insert(i, item)
                 return
         self._items.append(item)
 

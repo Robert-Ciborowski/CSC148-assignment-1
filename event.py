@@ -147,11 +147,6 @@ class Event:
         raise NotImplementedError('Implemented in a subclass')
 
 
-# You should use the provided attributes in your solution. However, if you need
-# to, you may add private attributes and helper methods, but do not change the
-# public interface.
-# Write docstrings for all methods you write, and document your attributes
-# in the class docstring.
 class CustomerArrival(Event):
     """A customer arrives at the checkout area ready to check out.
 
@@ -178,12 +173,10 @@ class CustomerArrival(Event):
             self.timestamp += 1
             return [self]
         else:
-            timestamp = 0
-
             # Create an event that checks out the customer if they are the
             # only customer in the line.
             if store.line_is_ready(line):
-                return [CheckoutStarted(timestamp, line)]
+                return [CheckoutStarted(self.timestamp, line)]
 
             return []
 
@@ -311,7 +304,7 @@ def create_event_list(event_file: TextIO) -> List[Event]:
                 items.append(item)
 
             customer = Customer(data[2], items)
-            events.append(CustomerArrival(customer, int(data[0])))
+            events.append(CustomerArrival(int(data[0]), customer))
 
     return events
 
