@@ -18,15 +18,11 @@ Author: Jacqueline Smith
 All of the files in this directory and all subdirectories are:
 Copyright (c) 2019 Jacqueline Smith
 """
-from store import CheckoutLine, RegularLine, ExpressLine, SelfServeLine
+from store import RegularLine, ExpressLine, SelfServeLine
 
 # TODO: review Piazza to see how to fix this.
 # Note: we need these imports to test the various functions of the lines
 from store import Item, Customer, EXPRESS_LIMIT
-
-# Also note: ExpressLine overrides can_accept, and SelfServeLine overrides
-# start_checkout.
-# Everything else is tested as an abstract CheckoutLine.
 
 
 def test_checkout_line_init() -> None:
@@ -34,7 +30,7 @@ def test_checkout_line_init() -> None:
     openness and queue.
 
     """
-    line = CheckoutLine(5)
+    line = RegularLine(5)
     assert line.capacity == 5
     assert line.is_open
     assert line.queue == []
@@ -59,13 +55,13 @@ def test_children_init() -> None:
 
 def test_len_empty() -> None:
     """ Test length of line when it is empty."""
-    line = CheckoutLine(5)
+    line = RegularLine(5)
     assert len(line) == 0
 
 
 def test_len_non_empty() -> None:
     """ Test length of line when it has customers."""
-    line = CheckoutLine(5)
+    line = RegularLine(5)
     item_list = [Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     item_list_2 = [Item('apples', 1)]
@@ -80,7 +76,7 @@ def test_len_non_empty() -> None:
 
 def test_can_accept_has_room() -> None:
     """ Test whether line can accept when it has room."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     assert line.can_accept(jeff)
@@ -88,7 +84,7 @@ def test_can_accept_has_room() -> None:
 
 def test_can_accept_no_room() -> None:
     """ Test whether line can accept when it doesn't have room."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     item_list_2 = [Item('bananas', 1), Item('bananas', 1)]
@@ -99,7 +95,7 @@ def test_can_accept_no_room() -> None:
 
 def test_can_accept_closed() -> None:
     """ Test whether line can accept when it is closed."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     line.is_open = False
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
@@ -108,7 +104,7 @@ def test_can_accept_closed() -> None:
 
 def test_accept_has_room() -> None:
     """ Test whether line accepts when it has room."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     assert line.accept(jeff)
@@ -117,7 +113,7 @@ def test_accept_has_room() -> None:
 
 def test_accept_no_room() -> None:
     """ Test whether line accepts when it doesn't have room."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     item_list_2 = [Item('bananas', 1), Item('bananas', 1)]
@@ -129,7 +125,7 @@ def test_accept_no_room() -> None:
 
 def test_accept_closed() -> None:
     """ Test whether line accepts when it is closed."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     line.is_open = False
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
@@ -138,14 +134,14 @@ def test_accept_closed() -> None:
 
 def test_start_checkout_empty() -> None:
     """ Test how many customers are left when an empty line starts checkout."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     assert line.start_checkout() == 0
 
 
 def test_start_checkout_non_empty() -> None:
     """ Test how many customers are left when a line with a customer
     starts checkout."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = [Item('bananas', 1), Item('apples', 2), Item('kiwis', 3)]
     jeff = Customer('Jeff', item_list)
     line.accept(jeff)
@@ -155,7 +151,7 @@ def test_start_checkout_non_empty() -> None:
 def test_start_checkout_two_in_line() -> None:
     """ Test how many customers are left when a line with more than one customer
     starts checkout."""
-    line = CheckoutLine(2)
+    line = RegularLine(2)
     item_list = [Item('bananas', 1), Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     item_list_2 = [Item('bananas', 1), Item('bananas', 1)]
@@ -167,14 +163,14 @@ def test_start_checkout_two_in_line() -> None:
 
 def test_close_no_customers() -> None:
     """ Test whether customers are returned when empty line closes."""
-    line = CheckoutLine(3)
+    line = RegularLine(3)
     assert line.close() == []
 
 
 def test_close_one_customer() -> None:
     """ Test whether customers are returned when a line with one customer
     closes."""
-    line = CheckoutLine(3)
+    line = RegularLine(3)
     item_list = [Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     line.accept(jeff)
@@ -184,7 +180,7 @@ def test_close_one_customer() -> None:
 def test_close_many_customers() -> None:
     """ Test whether correct customers are returned when line with more than
     one customer closes."""
-    line = CheckoutLine(3)
+    line = RegularLine(3)
     item_list = [Item('bananas', 1)]
     jeff = Customer('Jeff', item_list)
     item_list_2 = [Item('apples', 2)]
@@ -201,7 +197,7 @@ def test_close_many_customers() -> None:
 def test_express_accept() -> None:
     """ Test whether an express line accepts a customer with less than the limit
      of items."""
-    line = CheckoutLine(1)
+    line = RegularLine(1)
     item_list = []
 
     for i in range(0, EXPRESS_LIMIT - 1):
@@ -245,7 +241,7 @@ def test_self_checkout_many_items() -> None:
 def test_close_line_one_customer() -> None:
     """ Test whether close line returns customers when only one customer
     is in the line."""
-    line = CheckoutLine(4)
+    line = RegularLine(4)
     items = [Item('Bananas', 6)]
     c1 = Customer('Alice', items)
     line.accept(c1)
@@ -255,7 +251,7 @@ def test_close_line_one_customer() -> None:
 def test_close_line_no_customers() -> None:
     """ Test whether close line returns customers when no customers
     are in the line."""
-    line = CheckoutLine(4)
+    line = RegularLine(4)
     assert line.close() == []
 
 

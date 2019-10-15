@@ -276,13 +276,7 @@ class CheckoutLine:
     def can_accept(self, customer: Customer) -> bool:
         """Return True iff this CheckoutLine can accept <customer>.
         """
-        if not self.is_open:
-            return False
-
-        if len(self) < self.capacity:
-            return True
-
-        return False
+        raise NotImplementedError
 
     def accept(self, customer: Customer) -> bool:
         """Accept <customer> at the end of this CheckoutLine.
@@ -313,10 +307,7 @@ class CheckoutLine:
         self.queue is nonempty:
         This checkout line has a customer in it.
         """
-        if len(self.queue) == 0:
-            return 0
-
-        return self.queue[0].get_item_time()
+        raise NotImplementedError
 
     def complete_checkout(self) -> bool:
         """Finish the checkout for this CheckoutLine.
@@ -347,6 +338,27 @@ class CheckoutLine:
 class RegularLine(CheckoutLine):
     """A regular CheckoutLine."""
 
+    def can_accept(self, customer: Customer) -> bool:
+        """Return True iff this CheckoutLine can accept <customer>.
+        """
+        if not self.is_open:
+            return False
+
+        if len(self) < self.capacity:
+            return True
+
+        return False
+
+    def start_checkout(self) -> int:
+        """Checkout the next customer in this CheckoutLine.
+
+        Return the time it will take to checkout the next customer.
+        """
+        if len(self.queue) == 0:
+            return 0
+
+        return self.queue[0].get_item_time()
+
 
 class ExpressLine(CheckoutLine):
     """An express CheckoutLine.
@@ -360,8 +372,23 @@ class ExpressLine(CheckoutLine):
         of items.
         """
         if customer.num_items() <= EXPRESS_LIMIT:
-            return CheckoutLine.can_accept(self, customer)
+            if not self.is_open:
+                return False
+
+            if len(self) < self.capacity:
+                return True
+
         return False
+
+    def start_checkout(self) -> int:
+        """Checkout the next customer in this CheckoutLine.
+
+        Return the time it will take to checkout the next customer.
+        """
+        if len(self.queue) == 0:
+            return 0
+
+        return self.queue[0].get_item_time()
 
 
 class SelfServeLine(CheckoutLine):
@@ -370,12 +397,29 @@ class SelfServeLine(CheckoutLine):
     Takes twice as long to check out.
     """
 
+    def can_accept(self, customer: Customer) -> bool:
+        """Return True iff this CheckoutLine can accept <customer>.
+        """
+        if not self.is_open:
+            return False
+
+        if len(self) < self.capacity:
+            return True
+
+        return False
+
     def start_checkout(self) -> int:
         """Checkout the next customer in this CheckoutLine.
 
         Return the time it will take to checkout the next customer.
+
+        Note self checkout takes twice as long as the items the customer
+        has suggest-- twice as long as a regular line.
         """
-        return 2 * CheckoutLine.start_checkout(self)
+        if len(self.queue) == 0:
+            return 0
+
+        return 2 * self.queue[0].get_item_time()
 
 
 if __name__ == '__main__':
